@@ -1,11 +1,26 @@
 package wdsr.exercise3.record.rest;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import wdsr.exercise3.record.Record;
 import wdsr.exercise3.record.RecordInventory;
 
 @Path("/records")
@@ -28,6 +43,15 @@ public class RecordResource {
 	 * ** Returns a list of all records (as application/xml)
 	 * ** Response status: HTTP 200
 	 */
+	@GET
+	@Produces(MediaType.APPLICATION_XML)
+	public Response getAllRecords()
+	{
+		List<Record> records = new ArrayList<>();
+		records = recordInventory.getRecords();
+		GenericEntity<List<Record>> ge = new GenericEntity<List<Record>>(records) {};
+		return Response.ok(ge).build();
+	}
 
 	/**
 	 * POST https://localhost:8091/records
@@ -36,6 +60,18 @@ public class RecordResource {
 	 * ** Response status if ok: HTTP 201, Location header points to the newly created resource.
 	 * ** Response status if submitted record has ID set: HTTP 400
 	 */
+	@POST
+	@Consumes(MediaType.APPLICATION_XML)
+	@Produces(MediaType.APPLICATION_XML)
+	public Response addGivenRecord(Record r, @Context UriInfo ui)
+	{
+		if (r.getId() != null)
+			return Response.status(Status.BAD_REQUEST).build();
+		recordInventory.addRecord(r);
+		UriBuilder ub = ui.getAbsolutePathBuilder();
+		ub.path(Integer.toString(r.getId()));
+		return Response.created(ub.build()).build();
+	}
 	
 	/**
 	 * * GET https://localhost:8091/records/{id}
