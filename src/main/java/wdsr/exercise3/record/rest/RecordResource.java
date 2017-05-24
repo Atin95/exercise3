@@ -5,9 +5,12 @@ import java.util.List;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
@@ -79,6 +82,17 @@ public class RecordResource {
 	 * ** Response status if ok: HTTP 200
 	 * ** Response status if {id} is not known: HTTP 404
 	 */
+	@GET
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_XML)
+	public Response getRecord(@PathParam(value = "id") int id)
+	{
+		Record r = recordInventory.getRecord(id);
+		if (r != null)
+			return Response.ok(r).build();
+		return Response.status(Status.NOT_FOUND).build();
+	}
+	
 	 /**
 	 * * PUT https://localhost:8091/records/{id}
 	 * ** Replaces an existing record in entirety.
@@ -86,6 +100,17 @@ public class RecordResource {
 	 * ** Response status if ok: HTTP 204
 	 * ** Response status if {id} is not known: HTTP 404
 	 */
+	@PUT
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_XML)
+	public Response putRecord(Record r, @PathParam(value = "id") int id)
+	{
+		if (r.getId() != null && id != r.getId())
+			return Response.status(Status.BAD_REQUEST).entity("ID value error").build();
+		if (recordInventory.updateRecord(id, r))
+			return Response.noContent().build();
+		return Response.status(Status.NOT_FOUND).build();
+	}
 	
 	/**
 	 * * DELETE https://localhost:8091/records/{id}
@@ -93,4 +118,12 @@ public class RecordResource {
 	 * ** Response status if ok: HTTP 204
 	 * ** Response status if {id} is not known: HTTP 404
 	 */
+	@DELETE
+	@Path("/{id}")
+	public Response deleteRecord(@PathParam(value = "id") int id)
+	{
+		if (recordInventory.deleteRecord(id))
+			return Response.noContent().build();
+		return Response.status(Status.NOT_FOUND).build();
+	}
 }
